@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Project SYSTEM "Project-5.1.dtd">
+<!-- eric5 project file for project Wowza Startup Package Helpers -->
+<!-- Saved: 2015-02-05, 14:40:36 -->
+<!-- Copyright (C) 2015 ,  -->
+<Project version="5.1">
+  <Language></Language>
+  <Hash>7b8f63e80e4040a93abeba4a7266d353916a123d</Hash>
+  <ProgLanguage mixed="0">Python2</ProgLanguage>
+  <ProjectType>Other</ProjectType>
+  <Description></Description>
+  <Version>0.1</Version>
+  <Author></Author>
+  <Email></Email>
+  <Sources>
+    <Source>__init__.py</Source>
+    <Source>wowza_startup_package_helpers/__init__.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/__init__.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/server_license.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/mediacache.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/transcoder.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/apps/__init__.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/apps/live.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/apps/vod.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/apps/vods3.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/apps/livetranscode.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/apps/livesecurity.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/adminpassword.py</Source>
+    <Source>wowza_startup_package_helpers/logger.py</Source>
+    <Source>wowza_startup_package_helpers/config.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/base_script.py</Source>
+    <Source>wowza_startup_package_helpers/xml_handlers/__init__.py</Source>
+    <Source>wowza_startup_package_helpers/xml_handlers/objects.py</Source>
+    <Source>wowza_startup_package_helpers/xml_handlers/handler.py</Source>
+  </Sources>
+  <Forms/>
+  <Translations/>
+  <Resources/>
+  <Interfaces/>
+  <Others/>
+  <Vcs>
+    <VcsType>None</VcsType>
+  </Vcs>
+  <FiletypeAssociations>
+    <FiletypeAssociation pattern="*.idl" type="INTERFACES"/>
+    <FiletypeAssociation pattern="*.ptl" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.py" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.py2" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.pyw2" type="SOURCES"/>
+  </FiletypeAssociations>
+</Project>
