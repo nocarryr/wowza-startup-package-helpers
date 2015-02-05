@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
-<!-- eric5 project file for project Wowza Startup Package Helpers -->
-<!-- Saved: 2015-02-05, 14:40:36 -->
+<!-- eric project file for project Wowza Startup Package Helpers -->
 <!-- Copyright (C) 2015 ,  -->
 <Project version="5.1">
   <Language></Language>
@@ -12,6 +11,7 @@
   <Version>0.1</Version>
   <Author></Author>
   <Email></Email>
+  <Eol index="-1"/>
   <Sources>
     <Source>__init__.py</Source>
     <Source>wowza_startup_package_helpers/__init__.py</Source>
@@ -39,7 +39,110 @@
   <Interfaces/>
   <Others/>
   <Vcs>
-    <VcsType>None</VcsType>
+    <VcsType>Git</VcsType>
+    <VcsOptions>
+      <dict>
+        <key>
+          <string>add</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>checkout</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>commit</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>diff</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>export</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>global</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>history</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>log</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>remove</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>status</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>tag</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>update</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+      </dict>
+    </VcsOptions>
+    <VcsOtherData>
+      <dict/>
+    </VcsOtherData>
   </Vcs>
   <FiletypeAssociations>
     <FiletypeAssociation pattern="*.idl" type="INTERFACES"/>

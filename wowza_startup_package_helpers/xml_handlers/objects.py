@@ -1,10 +1,25 @@
 from xml.etree import ElementTree
+import json
 
-class XMLNode(object):
+class BaseNode(object):
+    def __init__(self, **kwargs):
+        self.parent = kwargs.get('parent')
+        self.children = []
+    @property
+    def root(self):
+        if self.parent is None:
+            return self
+        return self.parent.root
+    def add_child(self, **kwargs):
+        kwargs['parent'] = self
+        obj = self.__class__(**kwargs)
+        self.children.append(obj)
+        return obj
+        
+class XMLNode(BaseNode):
     def __init__(self, **kwargs):
         self._node = None
-        self.children = []
-        self.parent = kwargs.get('parent')
+        super(XMLNode, self).__init__(**kwargs)
         self.node = kwargs.get('node')
         if self.node is None:
             if self.parent is None:
@@ -56,10 +71,27 @@ class XMLNode(object):
         if self.node is None:
             return
         self.node.text = value
-    def add_child(self, **kwargs):
-        kwargs['parent'] = self
-        obj = XMLNode(**kwargs)
-        self.children.append(obj)
-        return obj
     def __str__(self):
         return str(self.node)
+        
+class DictNode(BaseNode):
+    def __init__(self, **kwargs):
+        super(DictNode, self).__init__(**kwargs)
+        self.tag = kwargs.get('tag')
+        self.attribs = kwargs.get('attribs', {})
+        self.text = kwargs.get('text')
+        for child in kwargs.get('children', []):
+            self.add_child(**child)
+    def to_dict(self):
+        d = dict(tag=self.tag, attribs=self.attribs, text=self.text)
+        d['children'] = []
+        for child in self.children:
+            d['children'].append(child.to_dict())
+        return d
+    def to_xml_node(self):
+        d = self.to_dict()
+        return XMLNode(**d)
+    @classmethod
+    def from_json(cls, js_str):
+        d = json.loads(js_str)
+        return cls(**d)
