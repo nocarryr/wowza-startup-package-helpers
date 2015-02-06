@@ -27,6 +27,9 @@ class XMLDoc(object):
                 raise 'Multiple matches for %s' % (path)
             match = match[0]
         return match
+    def insert_dict_node(self, dnode, path):
+        parent = self.find_by_path(path)
+        dnode.to_xml_node(parent=parent)
     def insert_from_dict(self, d, path):
         parent = self.find_by_path(path)
         dnode = DictNode(**d)
