@@ -1,22 +1,41 @@
 from base_script import BaseScript
-from wowza_startup_package_helpers.xml_handlers.objects import DictNode
-from wowza_startup_package_helpers.xml_handlers.handler import ParsedXMLFile
 
-class Transrate(ParsedXMLFile):
+from wowza_startup_package_helpers.xml_handlers.objects import XMLNode, DictNode
+from wowza_startup_package_helpers.xml_handlers.handler import XMLFile, ParsedXMLFile
+
+class ParsedTransrate(ParsedXMLFile):
     def __init__(self, **kwargs):
         self.script = kwargs.get('script')
-        kwargs['filename'] = self.script.build_filename('transcoder', 'templates', 'transrate.xml')
+        fn = self.script.build_filename('transcoder', 'templates', 'transrate.xml')
+        kwargs.setdefault('filename', fn)
         super(Transrate, self).__init__(**kwargs)
+        
+class Transrate(XMLFile):
+    def __init__(self, **kwargs):
+        self.script = kwargs.get('script')
+        fn = self.script.build_filename('transcoder', 'templates', 'transrate.xml')
+        kwargs.setdefault('filename', fn)
+        super(Transrate, self).__init__(**kwargs)
+        self.root_node = XMLNode(tag='Root', attribs={'version':'1'})
+        tcnode = self.root_node.add_child(tag='Transcode')
+        tcnode.add_child(tag='Description', text='Custom')
+        tcnode.add_child(tag='Encodes')
+        tcnode.add_child(tag='StreamNameGroups')
         
 class TranscodeMod(object):
     def __init__(self, **kwargs):
         self.children = []
         self.script = kwargs.get('script')
         self.name = kwargs.get('name')
-        self.base_path = '/'.join(['Transcode', self.search_path])
         self.xml_file = self.script.transrate_xml
         self.parent = kwargs.get('parent')
+        if self.parent is None:
+            self.base_path = '/'.join(['Transcode', self.search_path])
         self.node = self.find_node()
+        if self.node is None:
+            self.node = self.build_node(**kwargs)
+        else:
+            self.get_attrs_from_node()
     def add_child(self, cls, **kwargs):
         kwargs.setdefault('parent', self)
         kwargs.setdefault('script', self.script)
@@ -26,11 +45,20 @@ class TranscodeMod(object):
     def find_node(self):
         if self.parent is not None:
             obj = self.parent.node
+            search_path = getattr(self, 'search_path', None)
+            if search_path is not None:
+                p = '/'.join([search_path, self.tag])
+            else:
+                p = self.tag
         else:
             obj = self.xml_file
-        p = '/'.join([self.base_path, self.tag])
+            p = '/'.join([self.base_path, self.tag])
         if self.name is None:
-            return obj.find_by_path(p)
+            match = obj.find_by_path(p)
+            if isinstance(match, XMLNode):
+                return match
+            if not len(list(match)):
+                return None
         p = '/'.join([p, 'Name'])
         for match in obj.find_by_path(p, single_result=False):
             if match.text == self.name:
@@ -41,6 +69,8 @@ class TranscodeMod(object):
         for attr in self.tag_attrs:
             tag = self.format_tag_from_attr(attr)
             node = self.node.find_by_path(tag)
+            if not isinstance(node, XMLNode):
+                node = list(node)[0]
             val = node.text
             if val == 'True':
                 val = True
@@ -61,7 +91,24 @@ class TranscodeMod(object):
                 continue
             node.text = val
     def build_node(self, **kwargs):
-        return DictNode(**kwargs)
+        d = dict(tag=self.tag, children=[])
+        for attr in self.tag_attrs:
+            tag = self.format_tag_from_attr(attr)
+            val = getattr(self, attr, None)
+            if val is None:
+                val = kwargs.get(attr)
+                if val is None:
+                    val = getattr(self, 'attr_defaults', {}).get(attr)
+                setattr(self, attr, val)
+            if val is None:
+                continue
+            d['children'].append(dict(tag=tag, text=str(val)))
+        dnode = DictNode(**d)
+        if self.parent is None:
+            parent_node = self.xml_file.find_by_path(self.base_path)
+        else:
+            parent_node = self.parent.node
+        return dnode.to_xml_node(parent=parent_node)
         
 class Encode(TranscodeMod):
     search_path = 'Encodes'
@@ -69,13 +116,11 @@ class Encode(TranscodeMod):
     tag_attrs = ['name', 'stream_name', 'enable']
     def __init__(self, **kwargs):
         super(Encode, self).__init__(**kwargs)
-        self.stream_name = kwargs.get('stream_name')
-        self.enable = kwargs.get('enable')
         self.video = self.add_child(EncodeVideo, **kwargs.get('video', {}))
         self.audio = self.add_child(EncodeAudio, **kwargs.get('audio', {}))
         self.stream_name = kwargs.get('stream_name')
-        if self.stream_name is None and self.video.width is not None:
-            self.stream_name = 'mp4:${SourceStreamName}_%sp' % (self.video.width)
+        if self.stream_name is None and self.video.frame_size.width is not None:
+            self.stream_name = 'mp4:${SourceStreamName}_%sp' % (self.video.frame_size.width)
         
 class EncodeVideo(TranscodeMod):
     tag = 'Video'
@@ -86,10 +131,8 @@ class EncodeVideo(TranscodeMod):
     )
     def __init__(self, **kwargs):
         super(EncodeVideo, self).__init__(**kwargs)
-        self.profile = kwargs.get('profile')
-        self.bitrate = kwargs.get('bitrate')
         self.frame_size = self.add_child(FrameSize, **kwargs.get('frame_size', {}))
-        self.keyframe = self.add_child(KeyframeInterval, **kwargs.get('keyframe_interval'))
+        self.keyframe = self.add_child(KeyframeInterval, **kwargs.get('keyframe_interval', {}))
     def format_tag_from_attr(self, attr):
         if attr == 'gpu_id':
             return 'GPUID'
@@ -103,9 +146,6 @@ class FrameSize(TranscodeMod):
     )
     def __init__(self, **kwargs):
         super(FrameSize, self).__init__(**kwargs)
-        self.fit_mode = kwargs.get('fit_mode')
-        self.width = kwargs.get('width')
-        self.height = kwargs.get('height')
         
 class KeyframeInterval(TranscodeMod):
     tag = 'KeyframeInterval'
@@ -116,15 +156,12 @@ class KeyframeInterval(TranscodeMod):
     )
     def __init__(self, **kwargs):
         super(KeyframeInterval, self).__init__(**kwargs)
-        self.follow_source = kwargs.get('follow_source')
-        self.interval = kwargs.get('interval')
         
 class EncodeAudio(TranscodeMod):
     tag = 'Audio'
+    tag_attrs = ['codec', 'bitrate']
     def __init__(self, **kwargs):
         super(EncodeAudio, self).__init__(**kwargs)
-        self.codec = kwargs.get('codec')
-        self.bitrate = kwargs.get('bitrate')
         
         
 class StreamNameGroup(TranscodeMod):
@@ -156,19 +193,109 @@ class Decode(TranscodeMod):
     )
     def __init__(self, **kwargs):
         super(Decode, self).__init__(**kwargs)
-        self.implementation = kwargs.get('implementation')
-        self.deinterlace = kwargs.get('deinterlace')
         
 class Script(BaseScript):
     def build_transrate(self, **kwargs):
         encodes = self.encodes = []
         str_groups = self.stream_name_groups = []
-        self.transrate_xml = Transrate(script=self)
+        kwargs.setdefault('script', self)
+        if kwargs.get('strategy') == 'replace':
+            self.transrate_xml = Transrate(**kwargs)
+        else:
+            self.transrate_xml = ParsedTransrate(**kwargs)
         for enc_conf in kwargs.get('encodes', []):
-            encodes.append(Encode(script=self))
-        for str_groups in kwargs.get('stream_name_groups', []):
-            str_groups.append(StreamNameGroup(script=self))
+            enc_conf['script'] = self
+            encodes.append(Encode(**enc_conf))
+        for str_group in kwargs.get('stream_name_groups', []):
+            str_group['script'] = self
+            str_groups.append(StreamNameGroup(**str_group))
     def __call__(self):
         transrate_conf = self.config.get('transrate_conf')
         if transrate_conf is not None:
             self.build_transrate(**transrate_conf)
+
+DEFAULTS = dict(
+    strategy='replace', 
+    encodes=[
+        {
+            'name':'source', 
+            'enable':True, 
+            'stream_name':'mp4:${SourceStreamName}_source', 
+            'video':{
+                'codec':'PassThru', 
+                'bitrate':'${SourceVideoBitrate}', 
+            }, 
+            'audio':{
+                'codec':'AAC', 
+                'bitrate':128000, 
+            }, 
+        }, {
+            'name':'720p', 
+            'enable':True,
+            'video':{
+                'codec':'H.264', 
+                'profile':'main', 
+                'bitrate':1300000, 
+                'frame_size':{
+                    'width':1280, 
+                    'height':720, 
+                }, 
+            }, 
+            'audio':{
+                'codec':'AAC', 
+                'bitrate':128000, 
+            }, 
+        }, {
+            'name':'360p', 
+            'enable':True, 
+            'video':{
+                'codec':'H.264', 
+                'profile':'main', 
+                'bitrate':850000, 
+                'frame_size':{
+                    'width':640, 
+                    'height':360, 
+                }, 
+            }, 
+            'audio':{
+                'codec':'AAC', 
+                'bitrate':128000, 
+            }, 
+        }, {
+            'name':'240p', 
+            'enable':True, 
+            'video':{
+                'codec':'H.264', 
+                'profile':'baseline', 
+                'bitrate':350000, 
+                'frame_size':{
+                    'width':360, 
+                    'height':240, 
+                }, 
+            }, 
+            'audio':{
+                'codec':'AAC', 
+                'bitrate':96000, 
+            }, 
+        }, 
+    ], 
+    decode={}, 
+    stream_name_groups=[
+        {
+            'name':'all', 
+            'members':[
+                {'name':'source'}, 
+                {'name':'720p'}, 
+                {'name':'360p'}, 
+                {'name':'240p'}, 
+            ], 
+        }, 
+    ], 
+)
+    
+def test():
+    kwargs = dict(filename='test.xml')
+    kwargs.update(DEFAULTS)
+    script = Script()
+    script.build_transrate(**kwargs)
+    return script
