@@ -66,7 +66,7 @@ class BaseNode(object):
         obj = self.__class__(**kwargs)
         self.children.append(obj)
         return obj
-    def find_by_path(self, p):
+    def find_by_path(self, p, **kwargs):
         path_sep = self._path_sep
         psplit = p.split(path_sep)
         first = psplit[0]
