@@ -64,7 +64,7 @@ def build_config():
         if os.path.exists(fn):
             return Config.from_url(fn)
     logger.error('Config: no valid config_vars source')
-    sys.exit(0)
+    return Config()
     
 config = build_config()
     
