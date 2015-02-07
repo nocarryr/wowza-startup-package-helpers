@@ -21,10 +21,10 @@ class XMLDoc(object):
     def find_by_path(self, path, single_result=True):
         match = list(self.root_node.find_by_path(path))
         if not len(match):
-            raise 'No match found for %s' % (path)
+            return []
         if single_result:
             if len(match) > 1:
-                raise 'Multiple matches for %s' % (path)
+                raise Exception('Multiple matches for %s' % (path))
             match = match[0]
         return match
     def insert_dict_node(self, dnode, path):
