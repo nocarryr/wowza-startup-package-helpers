@@ -67,19 +67,23 @@ class BaseNode(object):
         self.children.append(obj)
         return obj
     def find_by_path(self, p):
-        my_path = self.path
         path_sep = self._path_sep
-        if p == my_path:
-            return [self]
-        if p.split(path_sep)[0] != my_path.split(path_sep)[0]:
-            return None
-        matches = []
+        psplit = p.split(path_sep)
+        first = psplit[0]
+        if len(psplit) > 1:
+            remain = path_sep.join(psplit[1:])
+        else:
+            remain = None
         for child in self.children:
-            match = child.find_by_path(p)
-            if match is None:
+            match_iter = None
+            if child.tag != first:
                 continue
-            matches.extend(match)
-        return matches
+            if remain is None:
+                match_iter = [child]
+            else:
+                match_iter = child.find_by_path(remain)
+            for match in match_iter:
+                yield match
         
 class XMLNode(BaseNode):
     def __init__(self, **kwargs):

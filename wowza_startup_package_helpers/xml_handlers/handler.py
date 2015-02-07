@@ -19,7 +19,7 @@ class XMLDoc(object):
     def root_node(self, value):
         self._root_node = value
     def find_by_path(self, path, single_result=True):
-        match = self.root_node.find_by_path(path)
+        match = list(self.root_node.find_by_path(path))
         if not len(match):
             raise 'No match found for %s' % (path)
         if single_result:
