@@ -14,7 +14,7 @@ class LogEntry(object):
         return ''.join([build_line(line) for line in self.message.splitlines()])
         
 class Logger(object):
-    log_dir = os.path.getcwd()
+    log_dir = os.getcwd()
     log_filename = 'startup_package_helper.log'
     def __init__(self):
         self.info('LOG START')
