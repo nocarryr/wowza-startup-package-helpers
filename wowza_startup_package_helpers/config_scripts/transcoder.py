@@ -116,6 +116,20 @@ class TranscodeMod(object):
         else:
             parent_node = self.parent.node
         return dnode.to_xml_node(parent=parent_node)
+    def clean_node(self, recursive=True):
+        for tag, attr in self.iter_tag_attrs():
+            node = self.node.find_by_path(tag)
+            if not isinstance(node, XMLNode):
+                try:
+                    node = list(node)[0]
+                except IndexError:
+                    continue
+            if getattr(self, attr, None) is None:
+                node.delete()
+        if not recursive:
+            return
+        for child in self.children:
+            child.clean_node(recursive)
         
 class Encode(TranscodeMod):
     search_path = 'Encodes'
@@ -216,10 +230,14 @@ class Script(BaseScript):
             self.transrate_xml = ParsedTransrate(**kwargs)
         for enc_conf in kwargs.get('encodes', []):
             enc_conf['script'] = self
-            encodes.append(Encode(**enc_conf))
+            enc = Encode(**enc_conf)
+            enc.clean_node(recursive=True)
+            encodes.append(enc)
         for str_group in kwargs.get('stream_name_groups', []):
             str_group['script'] = self
-            str_groups.append(StreamNameGroup(**str_group))
+            sng = StreamNameGroup(**str_group)
+            sng.clean_node(recursive=True)
+            str_groups.append(sng)
     def __call__(self):
         transrate_conf = self.config.get('transrate_conf')
         if transrate_conf is not None:
