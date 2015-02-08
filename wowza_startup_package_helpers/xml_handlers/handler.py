@@ -49,7 +49,7 @@ class XMLFile(XMLDoc):
         t = self.tree
         if t is None:
             t = ElementTree.ElementTree(element=root.node)
-        t.write(self.filename)
+        t.write(self.filename, encoding='UTF-8')
         
 class ParsedXMLFile(XMLFile):
     def __init__(self, **kwargs):
