@@ -101,7 +101,7 @@ class XMLNode(BaseNode):
             else:
                 self.node = ElementTree.SubElement(self.parent.node, 'a')
             self.tag = kwargs.get('tag')
-            for key, val in kwargs.get('attrib', {}).iteritems():
+            for key, val in kwargs.get('attribs', {}).iteritems():
                 self.set_attrib(key, val)
             if 'text' in kwargs:
                 self.text = kwargs['text']
