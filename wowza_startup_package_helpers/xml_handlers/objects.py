@@ -66,6 +66,11 @@ class BaseNode(object):
         obj = self.__class__(**kwargs)
         self.children.append(obj)
         return obj
+    def delete(self):
+        if self.parent is None:
+            return
+        self.parent.node.remove(self.node)
+        self.parent.children.remove(self)
     def find_by_path(self, p, **kwargs):
         path_sep = self._path_sep
         psplit = p.split(path_sep)
