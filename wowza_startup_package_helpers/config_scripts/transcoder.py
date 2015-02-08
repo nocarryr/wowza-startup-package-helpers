@@ -69,9 +69,12 @@ class TranscodeMod(object):
                 return match
     def format_tag_from_attr(self, attr):
         return ''.join([s.title() for s in attr.split('_')])
-    def get_attrs_from_node(self):
+    def iter_tag_attrs(self):
         for attr in self.tag_attrs:
             tag = self.format_tag_from_attr(attr)
+            yield tag, attr
+    def get_attrs_from_node(self):
+        for tag, attr in self.iter_tag_attrs():
             node = self.node.find_by_path(tag)
             if not isinstance(node, XMLNode):
                 node = list(node)[0]
@@ -84,12 +87,11 @@ class TranscodeMod(object):
                 val = int(val)
             setattr(self, attr, val)
     def update_node(self):
-        for attr in self.tag_attrs:
+        for tag, attr in self.iter_tag_attrs():
             val = getattr(self, attr)
             if val is None:
                 continue
             val = str(val)
-            tag = self.format_tag_from_attr(attr)
             node = self.node.find_by_path(tag)
             if not isinstance(node, XMLNode):
                 node = list(node)[0]
@@ -98,8 +100,7 @@ class TranscodeMod(object):
             node.text = val
     def build_node(self, **kwargs):
         d = dict(tag=self.tag, children=[])
-        for attr in self.tag_attrs:
-            tag = self.format_tag_from_attr(attr)
+        for tag, attr in self.iter_tag_attrs():
             val = getattr(self, attr, None)
             if val is None:
                 val = kwargs.get(attr)
