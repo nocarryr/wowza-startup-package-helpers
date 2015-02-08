@@ -27,8 +27,10 @@ class TranscodeMod(object):
         self.children = []
         self.script = kwargs.get('script')
         self.name = kwargs.get('name')
-        self.xml_file = self.script.transrate_xml
         self.parent = kwargs.get('parent')
+        self.post_init(**kwargs)
+        self.xml_file = self.script.transrate_xml
+        
         if self.parent is None:
             self.base_path = '/'.join(['Transcode', self.search_path])
         self.node = self.find_node()
@@ -36,6 +38,8 @@ class TranscodeMod(object):
             self.node = self.build_node(**kwargs)
         else:
             self.get_attrs_from_node()
+    def post_init(self, **kwargs):
+        pass
     def add_child(self, cls, **kwargs):
         kwargs.setdefault('parent', self)
         kwargs.setdefault('script', self.script)
@@ -87,6 +91,8 @@ class TranscodeMod(object):
             val = str(val)
             tag = self.format_tag_from_attr(attr)
             node = self.node.find_by_path(tag)
+            if not isinstance(node, XMLNode):
+                node = list(node)[0]
             if node.text == val:
                 continue
             node.text = val
@@ -100,8 +106,8 @@ class TranscodeMod(object):
                 if val is None:
                     val = getattr(self, 'attr_defaults', {}).get(attr)
                 setattr(self, attr, val)
-            if val is None:
-                continue
+            #if val is None:
+            #    continue
             d['children'].append(dict(tag=tag, text=str(val)))
         dnode = DictNode(**d)
         if self.parent is None:
@@ -119,20 +125,29 @@ class Encode(TranscodeMod):
         self.video = self.add_child(EncodeVideo, **kwargs.get('video', {}))
         self.audio = self.add_child(EncodeAudio, **kwargs.get('audio', {}))
         self.stream_name = kwargs.get('stream_name')
-        if self.stream_name is None and self.video.frame_size.width is not None:
-            self.stream_name = 'mp4:${SourceStreamName}_%sp' % (self.video.frame_size.width)
+        if self.stream_name is None:
+            if self.name == 'source':
+                self.stream_name = 'mp4:${SourceStreamName}_source'
+            elif self.video.frame_size.width is not None:
+                self.stream_name = 'mp4:${SourceStreamName}_%sp' % (self.video.frame_size.width)
+        self.update_node()
         
 class EncodeVideo(TranscodeMod):
     tag = 'Video'
-    tag_attrs = ['profile', 'bitrate', 'implementation', 'gpu_id']
+    tag_attrs = ['codec', 'profile', 'bitrate', 'implementation', 'gpu_id']
     attr_defaults = dict(
         implementation='default', 
         gpu_id=-1, 
     )
     def __init__(self, **kwargs):
         super(EncodeVideo, self).__init__(**kwargs)
-        self.frame_size = self.add_child(FrameSize, **kwargs.get('frame_size', {}))
-        self.keyframe = self.add_child(KeyframeInterval, **kwargs.get('keyframe_interval', {}))
+        if self.parent.name != 'source':
+            self.frame_size = self.add_child(FrameSize, **kwargs.get('frame_size', {}))
+            self.keyframe = self.add_child(KeyframeInterval, **kwargs.get('keyframe_interval', {}))
+        else:
+            self.codec = 'PassThru'
+            self.bitrate = '${SourceVideoBitrate}'
+        self.update_node()
     def format_tag_from_attr(self, attr):
         if attr == 'gpu_id':
             return 'GPUID'
@@ -144,8 +159,6 @@ class FrameSize(TranscodeMod):
     attr_defaults = dict(
         fit_mode='fit-height', 
     )
-    def __init__(self, **kwargs):
-        super(FrameSize, self).__init__(**kwargs)
         
 class KeyframeInterval(TranscodeMod):
     tag = 'KeyframeInterval'
@@ -154,14 +167,10 @@ class KeyframeInterval(TranscodeMod):
         follow_source=True, 
         interval=60, 
     )
-    def __init__(self, **kwargs):
-        super(KeyframeInterval, self).__init__(**kwargs)
         
 class EncodeAudio(TranscodeMod):
     tag = 'Audio'
     tag_attrs = ['codec', 'bitrate']
-    def __init__(self, **kwargs):
-        super(EncodeAudio, self).__init__(**kwargs)
         
         
 class StreamNameGroup(TranscodeMod):
@@ -184,6 +193,7 @@ class Member(TranscodeMod):
         super(Member, self).__init__(**kwargs)
         self.member_name = kwargs.get('member_name', self.name)
         self.encode_name = kwargs.get('encode_name', self.member_name)
+        self.update_node()
     
 class Decode(TranscodeMod):
     tag = 'Decode'
