@@ -3,6 +3,7 @@ from base import BaseApp
 class Live(BaseApp):
     app_type = 'Live'
     def modify_xml(self):
+        super(Live, self).modify_xml()
         root = self.xml_file.root_node
         node = list(root.find_by_path('Application/Streams/LiveStreamPacketizers'))[0]
         node.text = 'cupertinostreamingpacketizer, mpegdashstreamingpacketizer, sanjosestreamingpacketizer, smoothstreamingpacketizer'
