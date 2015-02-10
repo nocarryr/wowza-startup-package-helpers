@@ -32,6 +32,7 @@
     <Source>wowza_startup_package_helpers/xml_handlers/__init__.py</Source>
     <Source>wowza_startup_package_helpers/xml_handlers/objects.py</Source>
     <Source>wowza_startup_package_helpers/xml_handlers/handler.py</Source>
+    <Source>wowza_startup_package_helpers/config_scripts/apps/base.py</Source>
   </Sources>
   <Forms/>
   <Translations/>
