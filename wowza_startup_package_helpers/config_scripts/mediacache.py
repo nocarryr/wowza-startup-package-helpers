@@ -10,7 +10,7 @@ class Script(BaseScript):
             for name_node in props_node.find_by_path('Property/Name'):
                 if 'aws' not in name_node.text:
                     continue
-                value_node = name_node.parent.find_by_path('Value')[0]
+                value_node = list(name_node.parent.find_by_path('Value'))[0]
                 if 'accesskeyid' in name_node.text.lower():
                     value_node.text = self.config.aws_access_key_id
                 elif 'secretaccesskey' in name_node.text.lower():
